@@ -7,14 +7,12 @@ from layout import layout
 from bs4 import BeautifulSoup
 import re
 
-import dash  # This import was missing
+import dash
 
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 app.title = "History Dashboard"
 
-# Check if history.xlsx exists, if not, create it
 if not os.path.exists('history.xlsx'):
-    # to format get the information from the html
     with open('watch_history.html', 'r', encoding='utf-8') as file:
         content = file.read()
 
@@ -92,7 +90,6 @@ def display_page(pathname):
     if pathname == '/youtube-history':
         return youtube_layout
     elif pathname == '/location-history':
-        # Check if heatmap.html exists and handle appropriately
         if open_heatmap():
             return html.Div("Opening heatmap...", id="heatmap-loading")
         else:
@@ -100,7 +97,6 @@ def display_page(pathname):
     else:
         return layout
 
-# Register YouTube callbacks
 youtube_callbacks(app)
 
 if __name__ == '__main__':
