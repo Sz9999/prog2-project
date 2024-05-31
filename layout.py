@@ -1,7 +1,7 @@
 from dash import html
 
 layout = html.Div([
-    html.H1("Welcome to the History Dashboard"),
+    html.H1("Welcome to the History Dashboard", style={'textAlign': 'center'}),
     html.Div([
         html.A(
             html.Div([
@@ -21,3 +21,4 @@ layout = html.Div([
         )
     ], style={'display': 'flex', 'justifyContent': 'center'})
 ], style={'textAlign': 'center', 'fontFamily': 'Arial, sans-serif'})
+
