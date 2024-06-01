@@ -1,4 +1,5 @@
 import os
+import sys
 import zipfile
 import shutil
 from dash import dcc, html, Input, Output, State
@@ -14,9 +15,8 @@ import pandas as pd
 app = Dash(__name__, suppress_callback_exceptions=True)
 app.title = "History Dashboard"
 
-def process_takeout():
+def process_takeout(takeout_path):
     extracted_folder = "takeout_extracted"
-    takeout_path = r'C:\Users\molna\Downloads\takeout-20240520T115823Z-001.zip'
     
     if not os.path.exists(takeout_path):
         return "Invalid path provided."
@@ -72,14 +72,21 @@ def display_page(pathname):
     else:
         return layout
 
-# Process takeout
-process_takeout()
+# Capture the takeout path from command-line arguments
+if len(sys.argv) != 2:
+    print("Usage: python app.py <path_to_takeout_zip>")
+    sys.exit(1)
+
+takeout_path = sys.argv[1]
+
+# Process takeout with the provided path
+process_takeout(takeout_path)
 
 heatmap_path = os.path.join("geo-heatmap-master", "heatmap.html")
 if not os.path.exists(heatmap_path):
     run_geo_heatmap()
     os.chdir(os.path.join(os.getcwd(), '..'))
-    
+
 # Check if history.xlsx exists, if not, create it
 history_path = os.path.join("history.xlsx")
 if not os.path.exists(history_path) and os.path.exists('watch_history.html'):
