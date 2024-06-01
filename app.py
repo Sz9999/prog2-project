@@ -13,6 +13,9 @@ from layout import layout
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
+import mailbox
+from email.utils import parsedate_to_datetime
+from tqdm import tqdm
 
 app = Dash(__name__, suppress_callback_exceptions=True)
 app.title = "History Dashboard"
@@ -49,6 +52,28 @@ def process_takeout(takeout_path):
         #print(f"File {youtube_history_src} does not exist or {youtube_history_dst} already exists.")
         pass
     return "Takeout processed successfully."
+
+def process_mbox(mbox_path):
+    email_file = "email.csv"
+    
+    if not os.path.exists(mbox_path):
+        return "Invalid path provided."
+
+    if not os.path.exists(email_file):
+        mbox = mailbox.mbox(mbox_path)
+        data = []
+        for message in tqdm(mbox):
+            if message['date'] and message['from'] and message['subject']:
+                payload = message.get_payload(decode=True)
+                body = payload.decode(errors='ignore') if payload else ''
+                data.append({
+                    'date': parsedate_to_datetime(message['date']),
+                    'from': message['from'],
+                    'subject': message['subject'],
+                    'body': body
+                })
+        df = pd.DataFrame(data)
+        df.to_csv('email.csv', index=False)
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -88,14 +113,15 @@ def open_heatmap_on_click(n_clicks):
     return ""
 
 # Capture the takeout path from command-line arguments
-if len(sys.argv) != 2:
-    print("Usage: python app.py <path_to_takeout_zip>")
+if len(sys.argv) != 3:
+    print("Usage: python app.py <path_to_takeout_zip> <path_to_email.mbox>")
     sys.exit(1)
 
 takeout_path = sys.argv[1]
-
+mbox_path = sys.argv[2]
 # Process takeout with the provided path
 process_takeout(takeout_path)
+process_mbox(mbox_path)
 
 heatmap_path = os.path.join("geo-heatmap-master", "heatmap.html")
 if not os.path.exists(heatmap_path):

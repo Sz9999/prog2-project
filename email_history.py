@@ -13,9 +13,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import plotly.graph_objs as go
 
 df = pd.read_csv('email.csv')
-df['date'] = pd.to_datetime(df['date'], utc=True)
+df['date'] = pd.to_datetime(df['date'], utc=True, errors='coerce')
+na_count = df['date'].isna().sum()
+df = df.dropna(subset=['date'])
 df['year'] = df['date'].dt.year
 df['month'] = df['date'].dt.month
+df['week'] = df['date'].dt.isocalendar().week
 
 monthly_counts = df.groupby(['year', 'month']).size().unstack(level=0)
 email_counts_per_year = df['year'].value_counts().sort_index()
