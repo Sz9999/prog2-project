@@ -5,6 +5,7 @@ from dash import dcc, html, Input, Output, State
 from dash.exceptions import PreventUpdate
 from dash import Dash
 from location_history import open_heatmap, run_geo_heatmap
+from youtube_history import youtube_layout
 from layout import layout
 from bs4 import BeautifulSoup
 import re
@@ -33,7 +34,8 @@ def process_takeout():
         print(f"Copying {location_history_src} to {location_history_dst}")
         shutil.copy(location_history_src, location_history_dst)
     else:
-        print(f"File {location_history_src} does not exist or {location_history_dst} already exists.")
+        #print(f"File {location_history_src} does not exist or {location_history_dst} already exists.")
+        pass
 
     # Process YouTube History
     youtube_history_src = os.path.join(takeout_dir, "YouTube és YouTube Music", "előzmények", "megtekintési előzmények.html")
@@ -42,8 +44,8 @@ def process_takeout():
         print(f"Copying {youtube_history_src} to {youtube_history_dst}")
         shutil.copy(youtube_history_src, youtube_history_dst)
     else:
-        print(f"File {youtube_history_src} does not exist or {youtube_history_dst} already exists.")
-
+        #print(f"File {youtube_history_src} does not exist or {youtube_history_dst} already exists.")
+        pass
     return "Takeout processed successfully."
 
 app.layout = html.Div([
@@ -55,23 +57,32 @@ app.layout = html.Div([
     Output('page-content', 'children'),
     [Input('url', 'pathname')]
 )
+
 def display_page(pathname):
+    heatmap_path = os.path.join("geo-heatmap-master", "heatmap.html")
     if pathname == '/youtube-history':
         return youtube_layout
     elif pathname == '/location-history':
         # Check if heatmap.html exists and handle appropriately
-        if open_heatmap():
-            return html.Div("Opening heatmap...", id="heatmap-loading")
+        if os.path.exists(heatmap_path):
+            open_heatmap()
+            return layout
         else:
-            return html.Div("Generating heatmap...", id="heatmap-loading")
+            return html.Div("Heatmap does not exist.")
     else:
         return layout
 
 # Process takeout
 process_takeout()
 
+heatmap_path = os.path.join("geo-heatmap-master", "heatmap.html")
+if not os.path.exists(heatmap_path):
+    run_geo_heatmap()
+    os.chdir(os.path.join(os.getcwd(), '..'))
+    
 # Check if history.xlsx exists, if not, create it
-if not os.path.exists('history.xlsx') and os.path.exists('watch_history.html'):
+history_path = os.path.join("history.xlsx")
+if not os.path.exists(history_path) and os.path.exists('watch_history.html'):
     # Process watch_history.html
     # to format get the information from the html
     with open('watch_history.html', 'r', encoding='utf-8') as file:
@@ -148,7 +159,7 @@ if not os.path.exists('history.xlsx') and os.path.exists('watch_history.html'):
     df.to_excel('history.xlsx', index=False)
     print("10")
 
-from youtube_history import youtube_layout, youtube_callbacks
+from youtube_history import youtube_callbacks
 
 # Register YouTube callbacks
 youtube_callbacks(app)

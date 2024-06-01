@@ -326,11 +326,11 @@ if __name__ == "__main__":
     generator = Generator()
     generator.run(data_file, output_file, date_range, stream_data, settings)
     # Check if browser is text-based
-    if not isTextBasedBrowser(webbrowser.get()):
-        try:
-            print("[info] Opening {} in browser".format(output_file))
-            webbrowser.open("file://" + os.path.realpath(output_file))
-        except webbrowser.Error:
-            print("[info] No runnable browser found. Open {} manually.".format(
-                output_file))
-            print("[info] Path to heatmap file: \"{}\"".format(os.path.abspath(output_file)))
+    #if not isTextBasedBrowser(webbrowser.get()):
+    #    try:
+    #        print("[info] Opening {} in browser".format(output_file))
+    #        webbrowser.open("file://" + os.path.realpath(output_file))
+    #    except webbrowser.Error:
+    #        print("[info] No runnable browser found. Open {} manually.".format(
+    #            output_file))
+    #        print("[info] Path to heatmap file: \"{}\"".format(os.path.abspath(output_file)))
