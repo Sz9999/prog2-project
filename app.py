@@ -5,7 +5,7 @@ import os
 import sys
 import zipfile
 import shutil
-from dash import dcc, html, Input, Output, State
+from dash import dcc, html, Input, Output
 from dash.exceptions import PreventUpdate
 from dash import Dash
 from location_history import open_heatmap, run_geo_heatmap
@@ -53,13 +53,13 @@ def process_takeout(takeout_path):
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div(id='page-content'),
+    dcc.Store(id='dummy-output')  # Added dcc.Store to serve as a dummy output
 ])
 
 @app.callback(
     Output('page-content', 'children'),
     [Input('url', 'pathname')]
 )
-
 def display_page(pathname):
     heatmap_path = os.path.join("geo-heatmap-master", "heatmap.html")
     if pathname == '/youtube-history':
@@ -67,12 +67,23 @@ def display_page(pathname):
     elif pathname == '/location-history':
         # Check if heatmap.html exists and handle appropriately
         if os.path.exists(heatmap_path):
-            open_heatmap()
-            return layout
+            return html.Div([
+                html.Button("Open Heatmap", id="open-heatmap-btn")
+            ])
         else:
             return html.Div("Heatmap does not exist.")
     else:
         return layout
+
+@app.callback(
+    Output('dummy-output', 'data'),  # Using dcc.Store to avoid unnecessary updates to the layout
+    [Input('open-heatmap-btn', 'n_clicks')]
+)
+def open_heatmap_on_click(n_clicks):
+    if n_clicks is None:
+        raise PreventUpdate
+    open_heatmap()
+    return ""
 
 # Capture the takeout path from command-line arguments
 if len(sys.argv) != 2:
@@ -93,14 +104,11 @@ if not os.path.exists(heatmap_path):
 history_path = os.path.join("history.xlsx")
 if not os.path.exists(history_path) and os.path.exists('watch_history.html'):
     # Process watch_history.html
-    # to format get the information from the html
     with open('watch_history.html', 'r', encoding='utf-8') as file:
         content = file.read()
-    print("1")
 
     soup = BeautifulSoup(content, 'lxml')
     data = []
-    print("2")
 
     # Minden YouTube megtekintéshez tartozó elem megtalálása
     for item in soup.find_all('div', class_='outer-cell mdl-cell mdl-cell--12-col mdl-shadow--2dp'):
@@ -114,11 +122,9 @@ if not os.path.exists(history_path) and os.path.exists('watch_history.html'):
             'Title': title,
             'Date': date
         })
-    print("3")
 
     # Adatok DataFrame-be rendezése
     df = pd.DataFrame(data)
-    print("4")
 
     # Hónapok magyar neveinek és számuknak megfeleltetése
     month_map = {
@@ -135,18 +141,15 @@ if not os.path.exists(history_path) and os.path.exists('watch_history.html'):
         'nov': '11',
         'dec': '12'
     }
-    print("5")
 
     # Függvény a hónapok átalakítására
     def convert_month(text):
         for month_name, month_num in month_map.items():
             text = re.sub(month_name, month_num, text)
         return text
-    print("6")
 
     # Dátumok átalakítása
     df['Date'] = df['Date'].apply(convert_month)
-    print("7")
 
     # Mintázat, hogy csak a dátumot tartsuk meg a szövegből
     date_pattern = re.compile(r'\d{4}\. \d{2}\. \d{1,2}\. \d{1,2}:\d{2}:\d{2} CEST')
@@ -158,15 +161,12 @@ if not os.path.exists(history_path) and os.path.exists('watch_history.html'):
         return None
 
     df['Date'] = df['Date'].apply(extract_date)
-    print("8")
 
     # Átalakítás datetime formátumba
     df['Date'] = pd.to_datetime(df['Date'], format='%Y. %m. %d. %H:%M:%S CEST', errors='coerce')
-    print("9")
 
     # Save the dataframe as an Excel file
     df.to_excel('history.xlsx', index=False)
-    print("10")
 
 from youtube_history import youtube_callbacks
 from youtube_history import youtube_layout
