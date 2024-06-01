@@ -26,9 +26,6 @@ def run_geo_heatmap():
     try:
         # Change directory to geo-heatmap-master
         os.chdir(os.path.join(SCRIPT_DIR, "geo-heatmap-master"))
-        
-        # Install requirements
-        run(["pip", "install", "-r", "requirements.txt"])
 
         # Run geo_heatmap.py with Records.json as argument
         run(["python", "geo_heatmap.py", "Records.json"])

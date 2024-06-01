@@ -1,3 +1,6 @@
+from subprocess import run
+run(["pip", "install", "-r", "requirements.txt"])
+
 import os
 import sys
 import zipfile
@@ -95,7 +98,7 @@ if not os.path.exists(history_path) and os.path.exists('watch_history.html'):
         content = file.read()
     print("1")
 
-    soup = BeautifulSoup(content, 'html.parser')
+    soup = BeautifulSoup(content, 'lxml')
     data = []
     print("2")
 
