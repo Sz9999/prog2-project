@@ -6,7 +6,6 @@ from dash import dcc, html, Input, Output, State
 from dash.exceptions import PreventUpdate
 from dash import Dash
 from location_history import open_heatmap, run_geo_heatmap
-from youtube_history import youtube_layout
 from layout import layout
 from bs4 import BeautifulSoup
 import re
@@ -167,6 +166,7 @@ if not os.path.exists(history_path) and os.path.exists('watch_history.html'):
     print("10")
 
 from youtube_history import youtube_callbacks
+from youtube_history import youtube_layout
 
 # Register YouTube callbacks
 youtube_callbacks(app)
