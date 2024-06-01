@@ -6,7 +6,7 @@ layout = html.Div([
         html.A(
             html.Div([
                 html.Img(src='/assets/youtube_logo.png', style={'height': '100px'}),
-                html.P("YouTube History")
+                html.P("Watch History")
             ], style={'textAlign': 'center'}),
             href="/youtube-history",
             style={'marginRight': '20px', 'textDecoration': 'none', 'color': 'black'}
@@ -17,6 +17,14 @@ layout = html.Div([
                 html.P("Location History")
             ], style={'textAlign': 'center'}),
             href="/location-history",
+            style={'marginRight': '20px', 'textDecoration': 'none', 'color': 'black'}
+        ),
+        html.A(
+            html.Div([
+                html.Img(src='/assets/gmail_logo.png', style={'height': '100px'}),
+                html.P("Email History")
+            ], style={'textAlign': 'center'}),
+            href="/email-history",
             style={'textDecoration': 'none', 'color': 'black'}
         )
     ], style={'display': 'flex', 'justifyContent': 'center'})

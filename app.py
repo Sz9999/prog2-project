@@ -72,6 +72,8 @@ def display_page(pathname):
             ])
         else:
             return html.Div("Heatmap does not exist.")
+    elif pathname == '/email-history':
+        return email_layout
     else:
         return layout
 
@@ -170,9 +172,12 @@ if not os.path.exists(history_path) and os.path.exists('watch_history.html'):
 
 from youtube_history import youtube_callbacks
 from youtube_history import youtube_layout
+from email_history import email_callbacks
+from email_history import email_layout
 
 # Register YouTube callbacks
 youtube_callbacks(app)
+email_callbacks(app)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
