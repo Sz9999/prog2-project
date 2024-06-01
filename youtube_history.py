@@ -2,6 +2,7 @@ import pandas as pd
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.express as px
+import plotly.graph_objs as go
 
 # Load your data
 df = pd.read_excel('history.xlsx')
@@ -19,6 +20,15 @@ df['Week'] = df['Date'].dt.isocalendar().week  # Extract week
 # Aggregate data by year, month, day, hour, and week
 agg_df_week = df.groupby(['Year', 'Week']).size().reset_index(name='Count')
 video_counts_per_year = df['Year'].value_counts().sort_index()
+monthly_counts = df.groupby(['Year', 'Month']).size().unstack(level=0)
+traces = []
+for year in monthly_counts.columns:
+    traces.append(go.Scatter(
+        x=monthly_counts.index,
+        y=monthly_counts[year],
+        mode='lines+markers',
+        name=str(year)
+    ))
 
 youtube_layout = html.Div([
     html.H1("YouTube Viewing History Heatmap"),
@@ -78,6 +88,21 @@ youtube_layout = html.Div([
                 'paper_bgcolor': 'white',
                 'grid': {'y': {'gridcolor': 'lightgrey'}}
             }
+        }
+    ),
+    dcc.Graph(
+        id='line-chart',
+        figure={
+            'data': traces,
+            'layout': go.Layout(
+                title='Number of YouTube Videos Watched Per Month for Each Year',
+                xaxis={'title': 'Month', 'tickmode': 'array', 'tickvals': list(range(1, 13)), 'ticktext': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']},
+                yaxis={'title': 'Number of Videos Watched'},
+                legend={'title': 'Year'},
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                hovermode='closest'
+            )
         }
     )
 ])
