@@ -16,6 +16,7 @@ import pandas as pd
 import mailbox
 from email.utils import parsedate_to_datetime
 from tqdm import tqdm
+import webbrowser
 
 app = Dash(__name__, suppress_callback_exceptions=True)
 app.title = "History Dashboard"
@@ -206,4 +207,5 @@ youtube_callbacks(app)
 email_callbacks(app)
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    webbrowser.open_new("http://127.0.0.1:8050/")
+    app.run_server(debug=False)

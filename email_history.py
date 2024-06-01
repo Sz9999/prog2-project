@@ -19,6 +19,8 @@ df = df.dropna(subset=['date'])
 df['year'] = df['date'].dt.year
 df['month'] = df['date'].dt.month
 df['week'] = df['date'].dt.isocalendar().week
+df['hour'] = df['date'].dt.hour
+df['day'] = df['date'].dt.day
 
 monthly_counts = df.groupby(['year', 'month']).size().unstack(level=0)
 email_counts_per_year = df['year'].value_counts().sort_index()
