@@ -18,6 +18,7 @@ df['Week'] = df['Date'].dt.isocalendar().week  # Extract week
 
 # Aggregate data by year, month, day, hour, and week
 agg_df_week = df.groupby(['Year', 'Week']).size().reset_index(name='Count')
+video_counts_per_year = df['Year'].value_counts().sort_index()
 
 youtube_layout = html.Div([
     html.H1("YouTube Viewing History Heatmap"),
@@ -52,7 +53,33 @@ youtube_layout = html.Div([
             clearable=False
         ),
     ]),
-    dcc.Graph(id='weekly-graph')
+    dcc.Graph(id='weekly-graph'),
+    html.Button('Update Heatmaps', id='update-button'),
+    dcc.Graph(id='heatmap-1'),
+    dcc.Graph(id='heatmap-2'),
+    dcc.Graph(id='heatmap-3'),
+    dcc.Graph(
+        id='bar-chart',
+        figure={
+            'data': [
+                {
+                    'x': video_counts_per_year.index,
+                    'y': video_counts_per_year.values,
+                    'type': 'bar',
+                    'name': 'Videos Watched',
+                    'marker': {'color': 'skyblue'}
+                }
+            ],
+            'layout': {
+                'title': 'Number of YouTube Videos Watched Per Year',
+                'xaxis': {'title': 'Year', 'tickangle': 45},
+                'yaxis': {'title': 'Number of Videos Watched'},
+                'plot_bgcolor': 'white',
+                'paper_bgcolor': 'white',
+                'grid': {'y': {'gridcolor': 'lightgrey'}}
+            }
+        }
+    )
 ])
 
 def youtube_callbacks(app):
@@ -121,4 +148,58 @@ def youtube_callbacks(app):
 
         return fig
     
-    
+
+    def generate_heatmap(selected_year, selected_week, total_videos):
+        # Extract year, week, day, hour, and day of month for filtering
+        df['Year'] = df['Date'].dt.year
+        df['Week'] = df['Date'].dt.isocalendar().week
+        df['DayOfWeek'] = df['Date'].dt.dayofweek
+        df['Hour'] = df['Date'].dt.hour
+        df['DayOfMonth'] = df['Date'].dt.day
+        df['Month'] = df['Date'].dt.month
+
+        # Aggregate data by year, week, day, and hour
+        agg_df = df.groupby(['Year', 'Week', 'DayOfWeek', 'Hour']).size().reset_index(name='Count')
+        day_summary_df = df.groupby(['Year', 'Week', 'DayOfWeek', 'Month', 'DayOfMonth']).size().reset_index(name='DayCount')
+
+        # Merge the summary to get the DayCount for each day
+        agg_df = agg_df.merge(day_summary_df, on=['Year', 'Week', 'DayOfWeek'], how='left')
+
+        filtered_df = agg_df[(agg_df['Year'] == selected_year) & (agg_df['Week'] == selected_week)]
+        
+        heatmap_data = filtered_df.pivot(index='Hour', columns='DayOfWeek', values='Count').fillna(0)
+        day_summary = filtered_df[['DayOfWeek', 'Month', 'DayOfMonth', 'DayCount']].drop_duplicates().sort_values('DayOfWeek')
+        day_labels = [
+            f"{['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][row.DayOfWeek]} ({row.Month}/{row.DayOfMonth}) - {row.DayCount} videos"
+            for _, row in day_summary.iterrows()
+        ]
+        heatmap_data.columns = day_labels
+        
+        fig = px.imshow(
+            heatmap_data,
+            labels=dict(x="Day of Week", y="Hour of Day", color="Video Count"),
+            x=heatmap_data.columns,
+            y=heatmap_data.index,
+            color_continuous_scale='Viridis'
+        )
+        fig.update_layout(title=f'Videos Watched in Week {selected_week}, {selected_year} ({total_videos} videos)', xaxis_nticks=7)
+
+        return fig
+
+    @app.callback(
+        [Output('heatmap-1', 'figure'),
+        Output('heatmap-2', 'figure'),
+        Output('heatmap-3', 'figure')],
+        [Input('update-button', 'n_clicks')]
+    )
+    def update_heatmaps(n_clicks):
+        df['Year'] = df['Date'].dt.year
+        df['Week'] = df['Date'].dt.isocalendar().week
+        weekly_summary = df.groupby(['Year', 'Week']).size().reset_index(name='TotalCount')
+        top_weeks = weekly_summary.nlargest(3, 'TotalCount')
+        figures = []
+        for _, row in top_weeks.iterrows():
+            year, week, total_videos = row['Year'], row['Week'], row['TotalCount']
+            fig = generate_heatmap(year, week, total_videos)
+            figures.append(fig)
+        return figures

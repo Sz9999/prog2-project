@@ -5,3 +5,5 @@ pandas
 folium
 progressbar2
 ijson
+matplotlib
+plotly
